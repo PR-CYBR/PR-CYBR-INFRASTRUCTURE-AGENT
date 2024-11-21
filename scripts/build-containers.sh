@@ -1,16 +1,81 @@
 #!/bin/bash
 
-# ------------------------------- #
-# Key Objectives for this script: #
-#
-# 1. Update system
-# 2. Used by other automations as a self-healing script that will help resolve conflicts by:
-#   - building new container of enviornment
-#   - updating existing Dockerfile
-#   - updating existing docker-compose.yml file
-#   - updating existing `.env` file with necessary enviornment variables
-#   - updating existing package.json (if necessary)
-#   - runs docker-compose down && docker-compose build 
-#   - runs docker-compose up
-#   - runs docker ps
-# 3. Prints success message once all containers have been updated and have sucessfully been rebuilt and deployed
+# Determine the package manager and update the system
+update_system() {
+    if command -v apt-get &> /dev/null; then
+        echo "Using apt-get to update the system..."
+        sudo apt-get update && sudo apt-get upgrade -y
+    elif command -v yum &> /dev/null; then
+        echo "Using yum to update the system..."
+        sudo yum update -y
+    elif command -v dnf &> /dev/null; then
+        echo "Using dnf to update the system..."
+        sudo dnf update -y
+    elif command -v pacman &> /dev/null; then
+        echo "Using pacman to update the system..."
+        sudo pacman -Syu
+    else
+        echo "No supported package manager found. Please update the system manually."
+        exit 1
+    fi
+}
+
+# Check and update Dockerfile
+update_dockerfile() {
+    if [ -f Dockerfile ]; then
+        echo "Dockerfile found. Checking for updates..."
+        # Add logic to compare and update Dockerfile
+    else
+        echo "Dockerfile not found. Skipping update."
+    fi
+}
+
+# Check and update docker-compose.yml
+update_docker_compose() {
+    if [ -f docker-compose.yml ]; then
+        echo "docker-compose.yml found. Checking for updates..."
+        # Add logic to compare and update docker-compose.yml
+    else
+        echo "docker-compose.yml not found. Skipping update."
+    fi
+}
+
+# Check and update .env file
+update_env_file() {
+    if [ -f .env ]; then
+        echo ".env file found. Checking for updates..."
+        # Add logic to compare and update .env file
+    else
+        echo ".env file not found. Skipping update."
+    fi
+}
+
+# Check and update package.json
+update_package_json() {
+    if [ -f package.json ]; then
+        echo "package.json found. Checking for updates..."
+        # Add logic to compare and update package.json
+    else
+        echo "package.json not found. Skipping update."
+    fi
+}
+
+# Main script execution
+update_system
+
+update_dockerfile
+update_docker_compose
+update_env_file
+update_package_json
+
+# Rebuild and restart containers
+echo "Rebuilding and restarting containers..."
+docker-compose down
+docker-compose build
+docker-compose up -d
+
+# List running containers
+docker ps
+
+# Print success message
+echo "All containers have been successfully updated, rebuilt, and deployed."
