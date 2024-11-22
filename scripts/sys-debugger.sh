@@ -4,9 +4,9 @@
 # Key Objectives for the System Debugger Script #
 # 
 # 1. Update system (and install tmux, git, and curl)
-# 2. Creates new shell called `sys-debug`
+# 2. Creates new shell called `sys-debugger`
 # 3. Creates an initialization file for `sys-debug`
-# 4. Creates a cleanup file for `sys-debug`
+# 4. Creates a cleanup file for `sys-debugger`
 # 5. Creates a `.sys_env` file for `sys-debug` shell (and sets it in it's PATH)
 #   - Sections:
 #       - `## System Commands / Aliases / Variables`
@@ -16,8 +16,8 @@
 #       - `## TMUX Commands / Aliases / Variables`
 #       - `## Zerotier Commands / Aliases / Variables`
 # 
-# 6. Creates a directory for `sys-debug` shell (and sets it as it's home directory)
-# 7. Starts `sys-debug` shell (and sources it's `.sys_env` file to export it's variables)
+# 6. Creates a directory for `sys-debugger` shell (and sets it as it's home directory)
+# 7. Starts `sys-debugger` shell (and sources it's `.sys_env` file to export it's variables)
 # 8. Once it's loaded the new shell, have it present the user with an ASCII Art Banner saying "Sys-Debugger Menu", listing the following options:
 #       1. Status Check of the System (`syschk``)
 #       2. Fix Missing or Broken Packages (`fix-broken`)
@@ -182,4 +182,14 @@
 #                     - prompt user for desired location to save it to (defaults to the users home directory)
 #           - cat shell history into `backup-sys-debugger.log` file (to ensure documenting of commands ran by the shell) 
 #           - runs cleanup script to remove the files it created (execept for the `backup-sys-debugger.log` file), then kills the shell to return to the parent shell
-#           
+# 11. Returns to `sys-debugger` shell and run's nano to view the `.log` file (the one named after the option they chose)
+# 12. Once the user exits nano, prompt them with the following options:
+#      - 1. Get a summary of test results
+#            - provide a summary `.log` file (the one named after the option they chose)
+#      - 2. Run another test
+#            - return user to "Sys-Debugger Menu"
+#      - 3. Exit `sys-debugger` program
+#            - runs cleanup file, kills `sys-debugger` shell
+# 13. Print the following message to the user:
+#       - "Thank you for using the Sys-Debugger Script, if you have feedback or issues with the script, open a new issue here: https://github.com/PR-CYBR/PR-CYBR-INFRASTRUCTURE-AGENT/issues"
+# 14. End script
