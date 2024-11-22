@@ -28,9 +28,8 @@
 #           - loads user into new shell called `netsum`
 #           - creates new file called `net-debugger-netsum.log`
 #           - sources `.net_env` file to export enviornment variables
-#           - prompts user to choose from a list of options:
-#              - 
-#              - 
+#           - gathers network and firewall configuration settings:
+#           - 
 #           - runs cleanup script to remove the files it created (execept for the `backup-sys-debugger.log` file), then kills the shell to return to the parent shell
 #       2. List Open Ports (`lop`)
 #           - loads user into new shell called `lop`
