@@ -193,3 +193,273 @@
 # 13. Print the following message to the user:
 #       - "Thank you for using the Sys-Debugger Script, if you have feedback or issues with the script, open a new issue here: https://github.com/PR-CYBR/PR-CYBR-INFRASTRUCTURE-AGENT/issues"
 # 14. End script
+
+# Function to update the system and install necessary packages
+update_system() {
+    echo "Updating system and installing tmux, git, and curl..."
+    
+    # Update the package list
+    sudo apt update
+    
+    # Upgrade all installed packages to their latest versions
+    sudo apt upgrade -y
+    
+    # Install tmux, git, and curl
+    sudo apt install -y tmux git curl
+    
+    # Clean up any unnecessary packages
+    sudo apt autoremove -y
+    
+    # Confirm installation
+    echo "Installation complete. Verifying installations..."
+    for package in tmux git curl; do
+        if dpkg -l | grep -q "^ii  $package"; then
+            echo "$package is installed."
+        else
+            echo "Error: $package is not installed."
+        fi
+    done
+}
+
+# Function to create a new shell called `sys-debugger`
+create_sys_debugger_shell() {
+    echo "Creating sys-debugger shell..."
+
+    # Define the shell script path
+    SYS_DEBUGGER_SCRIPT="/usr/local/bin/sys-debugger"
+
+    # Create the shell script
+    cat << 'EOF' | sudo tee $SYS_DEBUGGER_SCRIPT > /dev/null
+#!/bin/bash
+# Sys-Debugger Shell
+
+# Load environment variables
+if [ -f ~/.sys_env ]; then
+    source ~/.sys_env
+fi
+
+# Start a new shell session
+bash --rcfile ~/.sys_env
+EOF
+
+    # Make the script executable
+    sudo chmod +x $SYS_DEBUGGER_SCRIPT
+
+    echo "Sys-debugger shell created at $SYS_DEBUGGER_SCRIPT. You can start it by running 'sys-debugger'."
+}
+
+# Function to create an initialization file for `sys-debug`
+create_initialization_file() {
+    echo "Creating initialization file for sys-debug..."
+
+    # Define the initialization file path
+    INIT_FILE="$HOME/.sys_env"
+
+    # Create the initialization file with environment variables and aliases
+    cat << 'EOF' > $INIT_FILE
+# Sys-Debug Initialization File
+
+# System Commands / Aliases / Variables
+alias ll='ls -la'
+export EDITOR=nano
+
+# Network Commands / Aliases / Variables
+alias myip='curl ifconfig.me'
+
+# Git Commands / Aliases / Variables
+alias gst='git status'
+alias gpl='git pull'
+
+# Docker Commands / Aliases / Variables
+alias dps='docker ps'
+alias dcu='docker-compose up'
+
+# TMUX Commands / Aliases / Variables
+alias ta='tmux attach'
+alias tls='tmux list-sessions'
+
+# Zerotier Commands / Aliases / Variables
+alias ztlist='zerotier-cli listnetworks'
+
+# Add more custom commands and environment variables as needed
+EOF
+
+    # Notify the user
+    echo "Initialization file created at $INIT_FILE."
+}
+
+# Function to create a cleanup file for `sys-debugger`
+create_cleanup_file() {
+    echo "Creating cleanup file for sys-debugger..."
+
+    # Define the cleanup script path
+    CLEANUP_SCRIPT="$HOME/sys-debugger-cleanup.sh"
+
+    # Create the cleanup script
+    cat << 'EOF' > $CLEANUP_SCRIPT
+#!/bin/bash
+# Sys-Debugger Cleanup Script
+
+# Remove temporary files
+echo "Cleaning up temporary files..."
+rm -f ~/syschk-sys-debugger.log
+rm -f ~/fix-broken-sys-debugger.log
+rm -f ~/audit-sys-debugger.log
+rm -f ~/fix-config-sys-debugger.log
+rm -f ~/backup-sys-debugger.log
+
+# Kill any lingering processes if necessary
+# Example: killall -q some_process_name
+
+# Notify the user
+echo "Cleanup complete."
+EOF
+
+    # Make the script executable
+    chmod +x $CLEANUP_SCRIPT
+
+    # Notify the user
+    echo "Cleanup file created at $CLEANUP_SCRIPT."
+}
+
+# Function to create a `.sys_env` file and set it in the PATH
+create_sys_env_file() {
+    echo "Creating .sys_env file..."
+
+    # Define the .sys_env file path
+    SYS_ENV_FILE="$HOME/.sys_env"
+
+    # Create the .sys_env file with environment variables and configurations
+    cat << 'EOF' > $SYS_ENV_FILE
+# Sys-Debugger Environment File
+
+# Add custom environment variables here
+export SYS_DEBUGGER_HOME="$HOME/sys-debugger"
+export PATH="$SYS_DEBUGGER_HOME/bin:$PATH"
+
+# Example aliases
+alias ll='ls -la'
+alias myip='curl ifconfig.me'
+
+# Add more custom commands and environment variables as needed
+EOF
+
+    # Ensure the .sys_env file is sourced in the user's shell profile
+    SHELL_PROFILE="$HOME/.bashrc"
+    if ! grep -q "source $SYS_ENV_FILE" $SHELL_PROFILE; then
+        echo "source $SYS_ENV_FILE" >> $SHELL_PROFILE
+    fi
+
+    # Notify the user
+    echo ".sys_env file created at $SYS_ENV_FILE and added to PATH."
+}
+
+# Function to create a directory for `sys-debugger` shell
+create_sys_debugger_directory() {
+    echo "Creating directory for sys-debugger shell..."
+
+    # Define the directory path
+    SYS_DEBUGGER_DIR="$HOME/sys-debugger"
+
+    # Create the directory if it doesn't exist
+    if [ ! -d "$SYS_DEBUGGER_DIR" ]; then
+        mkdir -p "$SYS_DEBUGGER_DIR"
+        echo "Directory created at $SYS_DEBUGGER_DIR."
+    else
+        echo "Directory already exists at $SYS_DEBUGGER_DIR."
+    fi
+
+    # Optionally, set permissions or create subdirectories
+    # chmod 755 "$SYS_DEBUGGER_DIR"
+    # mkdir -p "$SYS_DEBUGGER_DIR/logs"
+
+    # Notify the user
+    echo "Sys-debugger directory setup complete."
+}
+
+# Function to start `sys-debugger` shell
+start_sys_debugger_shell() {
+    echo "Starting sys-debugger shell..."
+
+    # Define the path to the sys-debugger script
+    SYS_DEBUGGER_SCRIPT="/usr/local/bin/sys-debugger"
+
+    # Check if the sys-debugger script exists
+    if [ -f "$SYS_DEBUGGER_SCRIPT" ]; then
+        # Start the sys-debugger shell
+        bash --rcfile "$HOME/.sys_env"
+    else
+        echo "Error: sys-debugger script not found at $SYS_DEBUGGER_SCRIPT."
+        echo "Please ensure the sys-debugger script is created and executable."
+    fi
+}
+
+# Function to display ASCII Art Banner and menu
+display_menu() {
+    # ASCII Art Banner
+    echo "Welcome to the Sys-Debugger Menu"
+    echo "Please select an option:"
+    echo "1. Status Check of the System (syschk)"
+    echo "2. Fix Missing or Broken Packages (fix-broken)"
+    echo "3. Security Audit (audit)"
+    echo "4. Fix Configuration Settings (fix-config)"
+    echo "5. Perform a Backup (backup)"
+    echo "6. Exit"
+    echo
+
+    # Read user input
+    read -p "Enter your choice [1-6]: " choice
+
+    # Handle user input
+    case $choice in
+        1)
+            echo "Starting Status Check of the System..."
+            # Call the function for syschk
+            ;;
+        2)
+            echo "Starting Fix Missing or Broken Packages..."
+            # Call the function for fix-broken
+            ;;
+        3)
+            echo "Starting Security Audit..."
+            # Call the function for audit
+            ;;
+        4)
+            echo "Starting Fix Configuration Settings..."
+            # Call the function for fix-config
+            ;;
+        5)
+            echo "Starting Perform a Backup..."
+            # Call the function for backup
+            ;;
+        6)
+            echo "Exiting Sys-Debugger. Goodbye!"
+            exit 0
+            ;;
+        *)
+            echo "Invalid choice. Please enter a number between 1 and 6."
+            display_menu
+            ;;
+    esac
+}
+
+# Main script execution
+
+# Update the system and install necessary packages
+update_system
+
+# Create necessary files and directories
+create_sys_debugger_directory
+create_sys_env_file
+create_initialization_file
+create_cleanup_file
+
+# Create and start the sys-debugger shell
+create_sys_debugger_shell
+start_sys_debugger_shell
+
+# Display the menu and handle user interaction
+display_menu
+
+# End of script
+echo "Thank you for using the Sys-Debugger Script. If you have feedback or issues, open a new issue here: https://github.com/PR-CYBR/PR-CYBR-INFRASTRUCTURE-AGENT/issues"
