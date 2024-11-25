@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  ubuntu-server:
+    build: .
+    container_name: ubuntu-server
+    restart: always
+    ports:
+      - "80:80" # Adjust as needed for your services
+    volumes:
+      - ./data:/data # Map volumes if needed
+    networks:
+      - ubuntu-network
+
+networks:
+  ubuntu-network:
+    driver: bridge

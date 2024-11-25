@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  tak-server:
+    build: .
+    container_name: tak-server
+    restart: always
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+    volumes:
+      - ./config:/opt/tak-server/config
+      - ./logs:/opt/tak-server/logs
+    networks:
+      - tak-server-network
+
+networks:
+  tak-server-network:
+    driver: bridge
