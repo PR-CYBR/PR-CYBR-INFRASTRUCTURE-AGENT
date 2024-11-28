@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  traefik:
+    build: .
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik.yml:/etc/traefik/traefik.yml
+      - ./dynamic:/etc/traefik/dynamic
+    networks:
+      - web
+    environment:
+      - TRAEFIK_LOG_LEVEL=INFO
+
+networks:
+  web:
+    external: true 
