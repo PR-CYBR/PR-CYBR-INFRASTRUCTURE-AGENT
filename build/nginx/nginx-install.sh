@@ -56,7 +56,7 @@ install_zerotier() {
 # Function to start Docker containers
 start_containers() {
     echo "Starting Docker containers..."
-    docker-compose -f build/nginx/docker-compose.yml up -d
+    docker-compose -f docker-compose.yml up -d
 }
 
 # Function to print access URL
