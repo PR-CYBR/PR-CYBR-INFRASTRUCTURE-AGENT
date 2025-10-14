@@ -13,6 +13,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Verify Codex readiness flag
+        run: |
+          if [ ! -f codex_ready.flag ]; then
+            echo "codex_ready.flag is missing. Ensure the automation suite has been finalized before running this workflow."
+            exit 1
+          fi
+          echo "codex_ready.flag found with contents:"
+          cat codex_ready.flag
+
       - name: Set up Docker Compose
         run: |
           sudo apt-get update
