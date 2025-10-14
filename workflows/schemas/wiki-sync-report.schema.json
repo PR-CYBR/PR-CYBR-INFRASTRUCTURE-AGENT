@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Wiki Synchronization Report",
+  "type": "object",
+  "required": ["synced", "skipped"],
+  "properties": {
+    "synced": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "status"],
+        "properties": {
+          "path": { "type": "string" },
+          "status": { "type": "string", "enum": ["updated", "created"] },
+          "diff": { "type": "string" }
+        }
+      }
+    },
+    "skipped": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "reason"],
+        "properties": {
+          "path": { "type": "string" },
+          "reason": { "type": "string" }
+        }
+      }
+    }
+  }
+}

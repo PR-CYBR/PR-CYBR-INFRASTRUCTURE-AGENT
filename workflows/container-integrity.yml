@@ -1,0 +1,133 @@
+schema: ./schemas/workflow-interface.schema.yml
+name: Container Integrity Enforcement
+version: '1.0'
+description: >-
+  Validates container image provenance, attestations, and SBOM integrity to
+  ensure supply chain trust signals are enforced before deployment.
+owners:
+  - platform-security
+inputs:
+  image_reference:
+    type: string
+    description: Fully qualified container image (registry/repository:tag or @digest).
+    required: true
+  policy_bundle:
+    type: string
+    description: Path or URL to the policy bundle used for verification.
+    default: policies/container-integrity/bundle.tar.gz
+  require_attestations:
+    type: boolean
+    description: Whether attestation verification is mandatory.
+    default: true
+outputs:
+  integrity_assertion:
+    type: artifact
+    description: Signed attestation summarizing verification checks.
+    format: application/json
+    schema: schemas/container-integrity-assertion.schema.json
+  attestation_status:
+    type: string
+    description: Overall attestation verification status (pass/fail/warn).
+jobs:
+  initialize_context:
+    name: Initialize verification context
+    lifecycle: setup
+    runs-on: ubuntu-latest
+    outputs:
+      policy_path: ${{ steps.bundle.outputs.path }}
+    steps:
+      - name: Download policy bundle
+        id: bundle
+        run: |
+          python scripts/workflows/fetch_policy_bundle.py \
+            --source "${{ inputs.policy_bundle }}" \
+            --destination artifacts/policy-bundle.tar.gz
+          echo "path=artifacts/policy-bundle.tar.gz" >> "$GITHUB_OUTPUT"
+  fetch_metadata:
+    name: Fetch registry metadata and SBOM
+    lifecycle: analysis
+    needs: initialize_context
+    runs-on: ubuntu-latest
+    outputs:
+      sbom_path: ${{ steps.sbom.outputs.path }}
+      descriptor_path: ${{ steps.descriptor.outputs.path }}
+    steps:
+      - name: Retrieve image descriptor
+        id: descriptor
+        run: |
+          python scripts/workflows/pull_image_descriptor.py \
+            --image "${{ inputs.image_reference }}" \
+            --output artifacts/image-descriptor.json
+          echo "path=artifacts/image-descriptor.json" >> "$GITHUB_OUTPUT"
+      - name: Retrieve SBOM
+        id: sbom
+        run: |
+          python scripts/workflows/pull_image_sbom.py \
+            --image "${{ inputs.image_reference }}" \
+            --output artifacts/image-sbom.json
+          echo "path=artifacts/image-sbom.json" >> "$GITHUB_OUTPUT"
+  verify_attestations:
+    name: Verify cosign attestations and signatures
+    lifecycle: analysis
+    needs:
+      - initialize_context
+      - fetch_metadata
+    runs-on: ubuntu-latest
+    outputs:
+      verification_summary: ${{ steps.verify.outputs.summary }}
+    steps:
+      - name: Install supply chain tooling
+        run: |
+          sudo apt-get update && sudo apt-get install -y cosign jq
+      - name: Validate signatures
+        id: verify
+        run: |
+          python scripts/workflows/verify_container_attestations.py \
+            --image "${{ inputs.image_reference }}" \
+            --policy "${{ needs.initialize_context.outputs.policy_path }}" \
+            --sbom "${{ needs.fetch_metadata.outputs.sbom_path }}" \
+            --require "${{ inputs.require_attestations }}" \
+            --output artifacts/container-verification.json
+          echo "summary=artifacts/container-verification.json" >> "$GITHUB_OUTPUT"
+  evaluate_runtime_policies:
+    name: Evaluate runtime hardening policies
+    lifecycle: remediation
+    needs:
+      - verify_attestations
+      - fetch_metadata
+    runs-on: ubuntu-latest
+    outputs:
+      policy_findings: ${{ steps.evaluate.outputs.path }}
+    steps:
+      - name: Evaluate runtime recommendations
+        id: evaluate
+        run: |
+          python scripts/workflows/evaluate_runtime_policies.py \
+            --descriptor "${{ needs.fetch_metadata.outputs.descriptor_path }}" \
+            --verification "${{ needs.verify_attestations.outputs.verification_summary }}" \
+            --output artifacts/runtime-policy-findings.json
+          echo "path=artifacts/runtime-policy-findings.json" >> "$GITHUB_OUTPUT"
+  publish_attestation:
+    name: Publish integrity assertion for downstream agents
+    lifecycle: reporting
+    needs:
+      - verify_attestations
+      - evaluate_runtime_policies
+    runs-on: ubuntu-latest
+    outputs:
+      status: ${{ steps.status.outputs.value }}
+    steps:
+      - name: Create assertion payload
+        id: status
+        run: |
+          python scripts/workflows/build_integrity_assertion.py \
+            --verification "${{ needs.verify_attestations.outputs.verification_summary }}" \
+            --runtime "${{ needs.evaluate_runtime_policies.outputs.policy_findings }}" \
+            --output artifacts/container-integrity-assertion.json
+          status=$(jq -r '.status' artifacts/container-integrity-assertion.json 2>/dev/null || echo "warn")
+          echo "value=$status" >> "$GITHUB_OUTPUT"
+      - name: Upload assertion
+        uses: actions/upload-artifact@v4
+        with:
+          name: container-integrity-assertion
+          path: artifacts/container-integrity-assertion.json
