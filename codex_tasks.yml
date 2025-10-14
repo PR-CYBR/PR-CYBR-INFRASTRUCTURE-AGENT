@@ -1,0 +1,55 @@
+registry:
+  synchronization:
+    description: >-
+      codex_tasks.yml is reviewed after each infrastructure automation run.
+      Maintainers reconcile task statuses using the logs emitted by the
+      build verification and container publishing workflows so the registry
+      always reflects the latest automation outputs.
+    workflows:
+      - name: build_and_test_validation
+        automation_path: .github/workflows/build-test.yml
+      - name: docker_image_publication
+        automation_path: .github/workflows/docker-hub-update.yml
+      - name: openai_function_status_checks
+        automation_path: .github/workflows/openai-function.yml
+
+  tasks:
+    - id: local_act_testing_environment
+      title: Establish local `act` parity testing for workflows
+      priority: high
+      category: testing
+      trigger_type: workflow_dispatch
+      linked_agent: PR-CYBR-INFRASTRUCTURE-AGENT
+      automation_path: .github/workflows/build-test.yml
+      tracking_discussion: https://github.com/PR-CYBR/PR-CYBR-INFRASTRUCTURE-AGENT/discussions
+      source_document: docs/OPORD/OPORD-PR-CYBR-INFRA-7.md
+
+    - id: inspircd_stack_automation
+      title: Automate Inspircd/Irssi provisioning and validation
+      priority: high
+      category: infrastructure
+      trigger_type: workflow_dispatch
+      linked_agent: PR-CYBR-INFRASTRUCTURE-AGENT
+      automation_path: .github/workflows/docker-compose.yml
+      tracking_issue: https://github.com/PR-CYBR/PR-CYBR-INFRASTRUCTURE-AGENT/issues
+      source_document: docs/OPORD/OPORD-PR-CYBR-INFRA-8.md
+
+    - id: tmux_interactive_terminal_setup
+      title: Expand setup automation with TMUX multi-window experience
+      priority: medium
+      category: developer-experience
+      trigger_type: workflow_dispatch
+      linked_agent: PR-CYBR-INFRASTRUCTURE-AGENT
+      automation_path: scripts/local_setup.sh
+      tracking_discussion: https://github.com/PR-CYBR/PR-CYBR-INFRASTRUCTURE-AGENT/discussions
+      source_document: docs/OPORD/OPORD-PR-CYBR-INFRASTRUCTURE-8.md
+
+    - id: gitrows_feedback_integration
+      title: Capture GitRows integration feedback for cross-agent sharing
+      priority: medium
+      category: collaboration
+      trigger_type: scheduled
+      linked_agent: PR-CYBR-INFRASTRUCTURE-AGENT
+      automation_path: https://github.com/PR-CYBR/PR-CYBR-INFRASTRUCTURE-AGENT/discussions
+      tracking_discussion: https://github.com/PR-CYBR/PR-CYBR-INFRASTRUCTURE-AGENT/discussions
+      source_document: docs/OPORD/OPORD-0006.md
