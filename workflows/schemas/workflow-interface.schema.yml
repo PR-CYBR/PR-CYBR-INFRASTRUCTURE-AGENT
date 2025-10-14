@@ -1,0 +1,93 @@
+schema_version: 1.0
+name: Workflow Interface Schema
+description: >-
+  Shared contract describing the structure of infrastructure automation workflows.
+  Agents can validate workflow metadata, inputs, outputs, and jobs against this schema.
+metadata:
+  owners:
+    - platform-engineering
+  tags:
+    - workflow
+    - schema
+    - automation
+definitions:
+  lifecycle:
+    description: Supported lifecycle phases for modular jobs.
+    enum:
+      - setup
+      - analysis
+      - remediation
+      - reporting
+      - cleanup
+  input:
+    description: Declarative representation of an input consumed by a workflow.
+    required:
+      - type
+      - description
+    properties:
+      type:
+        type: string
+      description:
+        type: string
+      required:
+        type: boolean
+        default: false
+      default:
+        type: any
+      enum:
+        type: array
+        items:
+          type: string
+  output:
+    description: Declarative representation of a workflow output produced for downstream agents.
+    required:
+      - type
+      - description
+    properties:
+      type:
+        type: string
+      description:
+        type: string
+      format:
+        type: string
+      schema:
+        type: string
+  job:
+    description: Modular job definition with lifecycle alignment and reusable outputs.
+    required:
+      - name
+      - lifecycle
+      - steps
+    properties:
+      name:
+        type: string
+      lifecycle:
+        $ref: '#/definitions/lifecycle'
+      needs:
+        type: array
+        items:
+          type: string
+      runs-on:
+        type: string
+      outputs:
+        type: object
+      steps:
+        type: array
+        items:
+          type: object
+          required:
+            - name
+          properties:
+            name:
+              type: string
+            uses:
+              type: string
+            run:
+              type: string
+            with:
+              type: object
+required:
+  - schema_version
+  - name
+  - description
+  - definitions

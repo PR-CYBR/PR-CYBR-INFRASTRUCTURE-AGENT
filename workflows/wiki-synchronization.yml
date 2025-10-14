@@ -1,0 +1,122 @@
+schema: ./schemas/workflow-interface.schema.yml
+name: Wiki Synchronization Automation
+version: '1.0'
+description: >-
+  Synchronizes engineering documentation from the main repository into the
+  associated wiki, ensuring platform knowledge stays up to date.
+owners:
+  - documentation-engineering
+inputs:
+  repository:
+    type: string
+    description: Source repository containing canonical documentation.
+    required: true
+  wiki_repository:
+    type: string
+    description: Target wiki repository slug.
+    required: true
+  sync_paths:
+    type: array
+    description: List of glob patterns to sync into the wiki.
+    default:
+      - docs/**/*.md
+      - README.md
+outputs:
+  sync_report:
+    type: artifact
+    description: JSON report summarizing synchronized files and diffs.
+    format: application/json
+    schema: schemas/wiki-sync-report.schema.json
+  updated_pages:
+    type: artifact
+    description: Markdown changelog for stakeholders tracking wiki updates.
+    format: text/markdown
+    schema: schemas/wiki-updates-changelog.schema.md
+jobs:
+  prepare_sources:
+    name: Prepare source and wiki repositories
+    lifecycle: setup
+    runs-on: ubuntu-latest
+    outputs:
+      wiki_path: ${{ steps.checkout-wiki.outputs.path }}
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.repository }}
+          path: source
+      - name: Checkout wiki repository
+        id: checkout-wiki
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.wiki_repository }}
+          path: wiki
+      - name: Configure git identity
+        run: |
+          git config --global user.name "automation-bot"
+          git config --global user.email "bot@example.com"
+  extract_content:
+    name: Extract documentation content
+    lifecycle: analysis
+    needs: prepare_sources
+    runs-on: ubuntu-latest
+    outputs:
+      bundle_path: ${{ steps.bundle.outputs.path }}
+    steps:
+      - name: Build documentation bundle
+        id: bundle
+        run: |
+          python scripts/workflows/build_wiki_bundle.py \
+            --source source \
+            --patterns "${{ inputs.sync_paths }}" \
+            --output artifacts/wiki-bundle.tar.gz
+          echo "path=artifacts/wiki-bundle.tar.gz" >> "$GITHUB_OUTPUT"
+  synchronize_wiki:
+    name: Apply updates to wiki repository
+    lifecycle: remediation
+    needs:
+      - prepare_sources
+      - extract_content
+    runs-on: ubuntu-latest
+    outputs:
+      report_path: ${{ steps.sync.outputs.report }}
+    steps:
+      - name: Apply bundle contents
+        id: sync
+        run: |
+          python scripts/workflows/apply_wiki_bundle.py \
+            --bundle "${{ needs.extract_content.outputs.bundle_path }}" \
+            --wiki "${{ needs.prepare_sources.outputs.wiki_path }}" \
+            --report artifacts/wiki-sync-report.json
+          echo "report=artifacts/wiki-sync-report.json" >> "$GITHUB_OUTPUT"
+  publish_changes:
+    name: Commit and push wiki updates
+    lifecycle: reporting
+    needs: synchronize_wiki
+    runs-on: ubuntu-latest
+    outputs:
+      changelog_path: ${{ steps.publish.outputs.path }}
+    steps:
+      - name: Generate changelog
+        id: publish
+        run: |
+          python scripts/workflows/generate_wiki_changelog.py \
+            --report "${{ needs.synchronize_wiki.outputs.report_path }}" \
+            --output artifacts/wiki-changelog.md
+          echo "path=artifacts/wiki-changelog.md" >> "$GITHUB_OUTPUT"
+      - name: Commit and push updates
+        run: |
+          cd "${{ needs.prepare_sources.outputs.wiki_path }}"
+          git status --short
+          git add .
+          if git diff --cached --quiet; then
+            echo "No wiki changes to commit."
+          else
+            git commit -m "chore: sync wiki from source"
+            git push origin HEAD
+          fi
+      - name: Upload changelog
+        uses: actions/upload-artifact@v4
+        with:
+          name: wiki-changelog
+          path: artifacts/wiki-changelog.md

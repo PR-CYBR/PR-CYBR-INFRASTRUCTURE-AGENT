@@ -1,0 +1,87 @@
+schema: ./schemas/workflow-interface.schema.yml
+name: Commit Activity Discussion Orchestration
+version: '1.0'
+description: >-
+  Aggregates commit activity and opens structured discussions for platform
+  maintainers to collaborate on review and follow-up actions.
+owners:
+  - developer-relations
+inputs:
+  repository:
+    type: string
+    description: Repository to analyze for commit activity.
+    required: true
+  lookback_days:
+    type: integer
+    description: Number of days of commit activity to consider.
+    default: 7
+  discussion_category:
+    type: string
+    description: Discussion category slug for posting summaries.
+    default: engineering-updates
+outputs:
+  discussion_threads:
+    type: artifact
+    description: JSON payload of created or updated discussion threads.
+    format: application/json
+    schema: schemas/discussion-thread.schema.json
+  engagement_summary:
+    type: artifact
+    description: Markdown summary of activity insights for newsletters.
+    format: text/markdown
+    schema: schemas/engagement-summary.schema.md
+jobs:
+  collect_activity:
+    name: Collect commit activity metrics
+    lifecycle: analysis
+    runs-on: ubuntu-latest
+    outputs:
+      metrics_path: ${{ steps.collect.outputs.metrics }}
+    steps:
+      - name: Gather commits
+        id: collect
+        run: |
+          python scripts/workflows/collect_commit_activity.py \
+            --repository "${{ inputs.repository }}" \
+            --days "${{ inputs.lookback_days }}" \
+            --output artifacts/commit-activity.json
+          echo "metrics=artifacts/commit-activity.json" >> "$GITHUB_OUTPUT"
+  craft_summary:
+    name: Generate engagement summary content
+    lifecycle: reporting
+    needs: collect_activity
+    runs-on: ubuntu-latest
+    outputs:
+      summary_path: ${{ steps.summary.outputs.path }}
+    steps:
+      - name: Build markdown summary
+        id: summary
+        run: |
+          python scripts/workflows/build_commit_summary.py \
+            --input "${{ needs.collect_activity.outputs.metrics_path }}" \
+            --output artifacts/commit-engagement.md
+          echo "path=artifacts/commit-engagement.md" >> "$GITHUB_OUTPUT"
+  manage_discussions:
+    name: Create or update discussion topics
+    lifecycle: remediation
+    needs:
+      - collect_activity
+      - craft_summary
+    runs-on: ubuntu-latest
+    outputs:
+      threads: ${{ steps.publish.outputs.path }}
+    steps:
+      - name: Publish discussions
+        id: publish
+        run: |
+          python scripts/workflows/publish_commit_discussions.py \
+            --input "${{ needs.collect_activity.outputs.metrics_path }}" \
+            --summary "${{ needs.craft_summary.outputs.summary_path }}" \
+            --category "${{ inputs.discussion_category }}" \
+            --output artifacts/discussion-threads.json
+          echo "path=artifacts/discussion-threads.json" >> "$GITHUB_OUTPUT"
+      - name: Upload discussion payload
+        uses: actions/upload-artifact@v4
+        with:
+          name: commit-discussion-threads
+          path: artifacts/discussion-threads.json

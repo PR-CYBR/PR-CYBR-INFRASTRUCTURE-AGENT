@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Discussion Thread Payload",
+  "type": "object",
+  "required": ["category", "threads"],
+  "properties": {
+    "category": {
+      "type": "string"
+    },
+    "threads": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["title", "url", "status"],
+        "properties": {
+          "title": { "type": "string" },
+          "url": { "type": "string", "format": "uri" },
+          "status": { "type": "string", "enum": ["created", "updated"] },
+          "summary": { "type": "string" }
+        }
+      }
+    }
+  }
+}
