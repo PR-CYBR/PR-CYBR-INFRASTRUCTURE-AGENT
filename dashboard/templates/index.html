@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Operations Dashboard{% endblock %}
+
+{% block content %}
+  <section class="summary">
+    <div>
+      <h2>Welcome</h2>
+      <p>
+        Use this surface to monitor critical infrastructure services and launch
+        automated remediation workflows. Data updates every time the page is
+        loaded or when the health endpoint is polled by your observability
+        tooling.
+      </p>
+    </div>
+    <div class="summary__meta">
+      <span>Last updated: {{ last_updated.strftime('%Y-%m-%d %H:%M:%S UTC') }}</span>
+      <a class="summary__json" href="{{ url_for('health_status') }}">JSON feed</a>
+    </div>
+  </section>
+
+  {% include 'components/health_grid.html' %}
+  {% include 'components/workflow_list.html' %}
+{% endblock %}

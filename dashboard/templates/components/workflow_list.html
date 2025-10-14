@@ -1,0 +1,22 @@
+<section class="panel">
+  <header class="panel__header">
+    <h2>Workflows</h2>
+    <p class="panel__subtitle">
+      Trigger automated maintenance tasks. Codex can update handlers through
+      ``dashboard.config`` overrides without touching the UI.
+    </p>
+  </header>
+  <div class="workflow-list">
+    {% for workflow in workflows %}
+      <article class="workflow-card">
+        <h3>{{ workflow.name|replace('-', ' ')|title }}</h3>
+        <p>{{ workflow.description }}</p>
+        <form method="post" action="{{ url_for('run_workflow', workflow_name=workflow.name) }}">
+          <button type="submit">Run workflow</button>
+        </form>
+      </article>
+    {% else %}
+      <p class="empty">No workflows configured.</p>
+    {% endfor %}
+  </div>
+</section>
