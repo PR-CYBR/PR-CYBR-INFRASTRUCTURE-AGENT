@@ -1,0 +1,28 @@
+<section class="panel">
+  <header class="panel__header">
+    <h2>System Health</h2>
+    <p class="panel__subtitle">Latest status from connected services.</p>
+  </header>
+  <div class="health-grid">
+    {% for check in health_checks %}
+      {% set payload = statuses.get(check.name, {}) %}
+      <article class="health-card health-card--{{ payload.get('status', 'unknown') }}">
+        <header>
+          <h3>{{ check.name|replace('-', ' ')|title }}</h3>
+          <span class="health-card__status">{{ payload.get('status', 'unknown')|upper }}</span>
+        </header>
+        <p class="health-card__description">{{ check.description }}</p>
+        <dl>
+          {% for key, value in payload.items() if key != 'status' %}
+            <div>
+              <dt>{{ key|replace('_', ' ')|title }}</dt>
+              <dd>{{ value }}</dd>
+            </div>
+          {% endfor %}
+        </dl>
+      </article>
+    {% else %}
+      <p class="empty">No health checks configured.</p>
+    {% endfor %}
+  </div>
+</section>
