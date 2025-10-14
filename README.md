@@ -134,3 +134,10 @@ This project is licensed under the **MIT License**. See the [`LICENSE`](LICENSE)
 ---
 
 For more information, refer to the [Terraform Documentation](https://www.terraform.io/docs/index.html), [Ansible Documentation](https://docs.ansible.com/ansible/latest/index.html), or contact the PR-CYBR team.
+
+## Automation Readiness
+
+To signal that the automation suite has completed successfully and the repository is ready for deployment, this project uses a
+`codex_ready.flag` file at the repository root. The flag should contain a brief status note or timestamp that documents when the
+automation checks were finalized. Downstream tooling and CI workflows read this file to confirm readiness before progressing to
+deployment tasks.
