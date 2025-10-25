@@ -127,6 +127,22 @@ terraform apply
 ansible-playbook playbooks/deploy.yml -i inventory/production
 ```
 
+### Utility Scripts
+
+- **Notion Sync**
+
+  Use `scripts/notion_sync.py` to push planning updates into the shared Notion workspace. The script accepts a JSON file containing an array of task payloads and can run safely in audit mode with `--dry-run`:
+
+  ```bash
+  python scripts/notion_sync.py --input build/tasks.json --dry-run
+  ```
+
+  Provide credentials via the `NOTION_TOKEN` and `NOTION_DATABASE_ID` environment variables (or the matching CLI flags) when executing against the live workspace. Dry-run mode skips remote writes and logs the payloads that would have been sent.
+
+### Rollout Checklist
+
+Detailed rollout guidance covering test workspace validation, feature branch requirements, and monitoring expectations is available in [`docs/rollout-checklist.md`](docs/rollout-checklist.md).
+
 ## License
 
 This project is licensed under the **MIT License**. See the [`LICENSE`](LICENSE) file for details.

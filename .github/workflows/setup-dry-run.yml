@@ -1,7 +1,12 @@
 name: setup-dry-run
 
 on:
-  workflow_dispatch:   # manual trigger
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run workflow in dry-run mode"
+        required: false
+        default: "true"
   push:
     branches: [ codex, agents, dev ]
   pull_request:
@@ -11,11 +16,15 @@ jobs:
   dry-run:
     runs-on: ubuntu-latest
     container: ubuntu:22.04   # run inside clean Ubuntu container
+    permissions:
+      contents: read
+    env:
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'false' && 'false' || 'true' }}
     steps:
-      - name: Install Git
+      - name: Install prerequisites
         run: |
           apt-get update -y
-          apt-get install -y git
+          apt-get install -y git curl
 
       - name: Clone repo
         run: |
@@ -25,3 +34,20 @@ jobs:
         run: |
           cd /workspace
           echo "✅ Successfully cloned and accessed repo at /workspace"
+          echo "Dry run mode: $DRY_RUN"
+
+      - name: Notify Slack
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'false' && secrets.SLACK_WEBHOOK_URL != '' }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          payload=$(python - <<'PY'
+import json
+import os
+
+print(json.dumps({
+    "text": f"setup-dry-run completed for {os.environ['GITHUB_REPOSITORY']} (run: {os.environ['GITHUB_RUN_ID']})"
+}))
+PY
+          )
+          curl -X POST -H 'Content-type: application/json' --data "$payload" "$SLACK_WEBHOOK_URL"

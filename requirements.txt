@@ -1,1 +1,5 @@
-# Add your Python dependencies here
+# Core runtime dependencies
+requests
+
+# Tooling and tests
+pytest
