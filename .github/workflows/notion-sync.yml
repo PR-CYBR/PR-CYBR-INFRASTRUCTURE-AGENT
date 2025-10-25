@@ -1,0 +1,77 @@
+name: Notion Sync
+
+on:
+  issues:
+    types:
+      - opened
+      - edited
+      - labeled
+      - unlabeled
+      - reopened
+      - closed
+  pull_request:
+    types:
+      - opened
+      - edited
+      - labeled
+      - unlabeled
+      - reopened
+      - closed
+      - ready_for_review
+  discussion:
+    types:
+      - created
+      - edited
+      - answered
+      - unanswered
+      - pinned
+      - unpinned
+  project_card:
+    types:
+      - created
+      - moved
+      - converted
+      - deleted
+  workflow_run:
+    workflows:
+      - Build and Publish image to Docker Hub
+      - maintenance
+      - setup-dry-run
+      - tfc-sync
+    types:
+      - completed
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+  discussions: read
+  projects: read
+  actions: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+      NOTION_ISSUES_DATABASE_ID: ${{ secrets.NOTION_ISSUES_DATABASE_ID }}
+      NOTION_PULL_REQUESTS_DATABASE_ID: ${{ secrets.NOTION_PULL_REQUESTS_DATABASE_ID }}
+      NOTION_DISCUSSIONS_DATABASE_ID: ${{ secrets.NOTION_DISCUSSIONS_DATABASE_ID }}
+      NOTION_PROJECTS_DATABASE_ID: ${{ secrets.NOTION_PROJECTS_DATABASE_ID }}
+      NOTION_WORKFLOWS_DATABASE_ID: ${{ secrets.NOTION_WORKFLOWS_DATABASE_ID }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Notion sync script
+        run: python scripts/notion_sync.py
