@@ -23,6 +23,7 @@ The **PR-CYBR-INFRASTRUCTURE-AGENT** focuses on automating, managing, and mainta
 
 - **Git**: For cloning the repository.
 - **Terraform**: Required for infrastructure provisioning.
+- **Terraform Cloud Account**: Used to execute plans and applies through the workflow bridge.
 - **Ansible**: For configuration management.
 - **Docker**: Required for containerization and deployment.
 - **Access to GitHub Actions**: For automated workflows.
@@ -56,30 +57,31 @@ _This script initializes Terraform and Ansible configurations for local developm
 
 To deploy the agent to a cloud environment:
 
-1. **Configure Repository Secrets**
+1. **Prepare Terraform Cloud**
 
-- Navigate to `Settings` > `Secrets and variables` > `Actions` in your GitHub repository.
-- Add the required secrets:
-     - `CLOUD_PROVIDER_ACCESS_KEY`
-     - `CLOUD_PROVIDER_SECRET_KEY`
-     - `DOCKERHUB_USERNAME`
-     - `DOCKERHUB_PASSWORD`
-     - Any other cloud-specific credentials.
+- Create (or reuse) a Terraform Cloud workspace for this agent and configure it for API-driven runs.
+- Store all cloud provider credentials, Docker Hub tokens, and other sensitive values as Terraform Cloud workspace variables so that GitHub never handles them directly.
+- (Optional) Create a second workspace dedicated to speculative plans if you want to isolate pull request runs from the main apply workspace.
 
-2. **Deploy Using GitHub Actions**
+2. **Connect GitHub to Terraform Cloud**
 
-- The deployment workflow is defined in `.github/workflows/docker-compose.yml`.
-- Push changes to the `main` branch to trigger the deployment workflow automatically.
+- In this repository, navigate to `Settings` > `Secrets and variables` > `Actions`.
+- Add a secret named `TF_API_TOKEN` that contains a Terraform Cloud user or team API token with permission to create runs in the target workspace(s).
+- Add repository variables for non-sensitive configuration:
+  - `TF_CLOUD_ORGANIZATION`: Terraform Cloud organization name.
+  - `TF_WORKSPACE`: Workspace that should receive apply runs from the `dev` branch.
+  - `TF_SPECULATIVE_WORKSPACE` (optional): Workspace to receive pull request plans; falls back to `TF_WORKSPACE` when omitted.
+  - `TF_CONFIG_DIRECTORY` (optional): Relative path to the Terraform configuration if not using the default `terraform/` directory.
 
-3. **Manual Deployment**
+3. **Deploy Using GitHub Actions**
 
-- Use the deployment script for manual deployment:
+- The Terraform Cloud bridge workflow lives at `.github/workflows/terraform-cloud-workflow-bridge.yml`.
+- Open a pull request targeting `impl` or `dev` to trigger a speculative plan in Terraform Cloud. The workflow posts the outcome back to the pull request and leaves all secrets in Terraform Cloud.
+- Merge to `dev` (or run the workflow manually) to upload configuration and kick off an apply run in Terraform Cloud.
 
-```bash
-./scripts/deploy_agent.sh
-```
+4. **Manual Deployment**
 
-- Ensure you have Docker, Terraform, Ansible, and cloud CLI tools installed and configured on your machine.
+- If you must execute Terraform locally, export the same variables used in the workflow and run commands from the `terraform/` directory. Remember to avoid committing sensitive values and continue storing them in Terraform Cloud.
 
 ## Integration
 
