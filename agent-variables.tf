@@ -17,6 +17,31 @@ variable "DOCKERHUB_USERNAME" {
   description = "Docker Hub username"
 }
 
+# --- GitHub / Terraform Cloud ---
+variable "GITHUB_TOKEN" {
+  type        = string
+  sensitive   = true
+  description = "GitHub personal access token for repository automation"
+}
+
+variable "TFC_TOKEN" {
+  type        = string
+  sensitive   = true
+  description = "Terraform Cloud user or team token"
+}
+
+# --- Docker Publishing (GitHub Secrets) ---
+variable "PR_CYBR_DOCKER_USER" {
+  type        = string
+  description = "GitHub secret providing Docker Hub username"
+}
+
+variable "PR_CYBR_DOCKER_PASS" {
+  type        = string
+  sensitive   = true
+  description = "GitHub secret providing Docker Hub password"
+}
+
 # --- Global Infrastructure URIs ---
 variable "GLOBAL_DOMAIN" {
   type        = string
@@ -77,4 +102,46 @@ variable "AGENT_COLLAB" {
   type        = string
   sensitive   = true
   description = "Token for governance, discussions, issues, project boards"
+}
+
+# --- Knowledge Management (Notion) ---
+variable "NOTION_TOKEN" {
+  type        = string
+  sensitive   = true
+  description = "Notion integration token for workspace automation"
+}
+
+variable "NOTION_PAGE_ID" {
+  type        = string
+  description = "Root Notion page identifier"
+}
+
+variable "NOTION_DISCUSSIONS_ARC_DB_ID" {
+  type        = string
+  description = "Notion database ID for discussions archive"
+}
+
+variable "NOTION_ISSUES_BACKLOG_DB_ID" {
+  type        = string
+  description = "Notion database ID for issues backlog"
+}
+
+variable "NOTION_KNOWLEDGE_FILE_DB_ID" {
+  type        = string
+  description = "Notion database ID for knowledge files"
+}
+
+variable "NOTION_PR_BACKLOG_DB_ID" {
+  type        = string
+  description = "Notion database ID for pull request backlog"
+}
+
+variable "NOTION_PROJECT_BOARD_BACKLOG_DB_ID" {
+  type        = string
+  description = "Notion database ID for project board backlog"
+}
+
+variable "NOTION_TASK_BACKLOG_DB_ID" {
+  type        = string
+  description = "Notion database ID for task backlog"
 }
