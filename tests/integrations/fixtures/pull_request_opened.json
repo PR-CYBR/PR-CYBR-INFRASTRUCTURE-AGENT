@@ -1,0 +1,12 @@
+{
+  "action": "opened",
+  "repository": {
+    "full_name": "PR-CYBR/PR-CYBR-INFRASTRUCTURE-AGENT"
+  },
+  "pull_request": {
+    "number": 5,
+    "draft": false,
+    "title": "Improve rollout documentation",
+    "user": {"login": "infra-bot"}
+  }
+}

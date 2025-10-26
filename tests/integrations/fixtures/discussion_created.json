@@ -1,0 +1,11 @@
+{
+  "action": "created",
+  "repository": {
+    "full_name": "PR-CYBR/PR-CYBR-INFRASTRUCTURE-AGENT"
+  },
+  "discussion": {
+    "number": 2,
+    "title": "New infrastructure idea",
+    "category": {"slug": "ideas"}
+  }
+}

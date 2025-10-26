@@ -1,0 +1,11 @@
+{
+  "action": "opened",
+  "repository": {
+    "full_name": "PR-CYBR/PR-CYBR-INFRASTRUCTURE-AGENT"
+  },
+  "issue": {
+    "number": 101,
+    "title": "Connectivity issue",
+    "user": {"login": "octocat"}
+  }
+}

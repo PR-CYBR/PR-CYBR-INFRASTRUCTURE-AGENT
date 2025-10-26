@@ -1,0 +1,12 @@
+{
+  "action": "created",
+  "project": {
+    "id": 77,
+    "title": "Infrastructure Roadmap"
+  },
+  "item": {
+    "id": 441,
+    "content_type": "Issue",
+    "status": "Todo"
+  }
+}
