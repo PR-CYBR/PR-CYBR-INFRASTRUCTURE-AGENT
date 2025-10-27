@@ -8,26 +8,49 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     env:
-      REQUIRED_VARS: |
+      REQUIRED_SECRETS: |
+        TFC_TOKEN
         AGENT_ACTIONS
-        NOTION_DISCUSSIONS_ARC_DB_ID
-        NOTION_ISSUES_BACKLOG_DB_ID
-        NOTION_KNOWLEDGE_FILE_DB_ID
-        NOTION_PAGE_ID
-        NOTION_PR_BACKLOG_DB_ID
-        NOTION_PROJECT_BOARD_BACKLOG_DB_ID
-        NOTION_TASK_BACKLOG_DB_ID
         NOTION_TOKEN
+        PR_CYBR_DOCKER_PASS
+        GLOBAL_TAILSCALE_AUTHKEY
+        GLOBAL_ZEROTIER_NETWORK_ID
+      REQUIRED_VARS: |
+        DOCKERHUB_USERNAME
+        GLOBAL_DOMAIN
+        GLOBAL_ELASTIC_URI
+        NOTION_PAGE_ID
+      TFC_TOKEN: ${{ secrets.TFC_TOKEN }}
+      AGENT_ACTIONS: ${{ secrets.AGENT_ACTIONS }}
+      NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+      PR_CYBR_DOCKER_PASS: ${{ secrets.PR_CYBR_DOCKER_PASS }}
+      GLOBAL_TAILSCALE_AUTHKEY: ${{ secrets.GLOBAL_TAILSCALE_AUTHKEY }}
+      GLOBAL_ZEROTIER_NETWORK_ID: ${{ secrets.GLOBAL_ZEROTIER_NETWORK_ID }}
+      DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+      GLOBAL_DOMAIN: ${{ vars.GLOBAL_DOMAIN }}
+      GLOBAL_ELASTIC_URI: ${{ vars.GLOBAL_ELASTIC_URI }}
+      NOTION_PAGE_ID: ${{ vars.NOTION_PAGE_ID }}
     steps:
       - name: Check required environment variables
         run: |
           missing=false
-          for var in $REQUIRED_VARS; do
+          echo "Checking required secrets..."
+          for var in $REQUIRED_SECRETS; do
             if [ -z "${!var}" ]; then
-              echo "\u274c Missing required environment variable: $var"
+              echo "\u274c Missing required secret: $var"
               missing=true
             else
-              echo "\u2705 $var is set"
+              echo "\u2705 $var secret is set"
+            fi
+          done
+
+          echo "Checking required repository variables..."
+          for var in $REQUIRED_VARS; do
+            if [ -z "${!var}" ]; then
+              echo "\u274c Missing required repository variable: $var"
+              missing=true
+            else
+              echo "\u2705 $var repository variable is set"
             fi
           done
           if [ "$missing" = true ]; then
