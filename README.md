@@ -54,32 +54,31 @@ _This script initializes Terraform and Ansible configurations for local developm
 
 ### Cloud Deployment
 
-To deploy the agent to a cloud environment:
+To deploy the agent using the unified Terraform Cloud workflow:
 
-1. **Configure Repository Secrets**
+1. **Configure Repository Secrets & Variables**
 
-- Navigate to `Settings` > `Secrets and variables` > `Actions` in your GitHub repository.
-- Add the required secrets:
-     - `CLOUD_PROVIDER_ACCESS_KEY`
-     - `CLOUD_PROVIDER_SECRET_KEY`
-     - `DOCKERHUB_USERNAME`
-     - `DOCKERHUB_PASSWORD`
-     - Any other cloud-specific credentials.
+   - Navigate to `Settings` > `Secrets and variables` > `Actions` in your GitHub repository.
+   - Populate the following names to mirror the A-04 Terraform Cloud workspace schema:
+     - Secrets: `TFC_TOKEN`, `AGENT_ACTIONS`, `NOTION_TOKEN`, `PR_CYBR_DOCKER_PASS`, `GLOBAL_TAILSCALE_AUTHKEY`, `GLOBAL_ZEROTIER_NETWORK_ID`
+     - Variables: `DOCKERHUB_USERNAME`, `GLOBAL_DOMAIN`, `GLOBAL_ELASTIC_URI`, `NOTION_PAGE_ID`
 
 2. **Deploy Using GitHub Actions**
 
-- The deployment workflow is defined in `.github/workflows/docker-compose.yml`.
-- Push changes to the `main` branch to trigger the deployment workflow automatically.
+   - Terraform automation runs through `.github/workflows/tfc-sync.yml`, which executes all Terraform commands from `./infra`.
+   - Build and publishing automation is handled by `.github/workflows/docker-hub-update.yml` using the same secret names listed above.
 
-3. **Manual Deployment**
+3. **Manual Terraform Operations**
 
-- Use the deployment script for manual deployment:
+   - To run Terraform locally, work from the `infra/` directory:
 
 ```bash
-./scripts/deploy_agent.sh
+cd infra
+terraform init
+terraform plan -var-file="variables.tfvars"
 ```
 
-- Ensure you have Docker, Terraform, Ansible, and cloud CLI tools installed and configured on your machine.
+   - Update `infra/variables.tfvars` with local-safe values if you need to run plans outside of Terraform Cloud.
 
 ## Integration
 
