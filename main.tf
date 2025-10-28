@@ -24,11 +24,17 @@ terraform {
   }
 }
 
+# Local values
+locals {
+  agent_version = "0.1.0"
+  agent_name    = "PR-CYBR-INFRASTRUCTURE-AGENT"
+}
+
 # Placeholder resource to ensure terraform plan/apply works
 # This will be replaced with actual infrastructure resources
 resource "null_resource" "agent_placeholder" {
   triggers = {
-    agent_version = "0.1.0"
+    agent_version = local.agent_version
   }
 
   provisioner "local-exec" {
@@ -38,11 +44,11 @@ resource "null_resource" "agent_placeholder" {
 
 # Output agent information
 output "agent_name" {
-  value       = "PR-CYBR-INFRASTRUCTURE-AGENT"
+  value       = local.agent_name
   description = "Name of the PR-CYBR Infrastructure Agent"
 }
 
 output "agent_version" {
-  value       = "0.1.0"
+  value       = local.agent_version
   description = "Version of the PR-CYBR Infrastructure Agent"
 }
