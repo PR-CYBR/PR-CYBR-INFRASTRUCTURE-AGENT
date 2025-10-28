@@ -28,11 +28,11 @@ terraform {
 # This will be replaced with actual infrastructure resources
 resource "null_resource" "agent_placeholder" {
   triggers = {
-    timestamp = timestamp()
+    agent_version = "0.1.0"
   }
 
   provisioner "local-exec" {
-    command = "echo 'PR-CYBR Infrastructure Agent placeholder resource'"
+    command = "echo 'PR-CYBR Infrastructure Agent initialized'"
   }
 }
 
